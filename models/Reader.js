@@ -27,9 +27,9 @@ const readerSchema = new mongoose.Schema(
         default: "Point",
       },
       coordinates: {
-        type: [Number],
-        required: true,
-      },
+  type: [Number],
+  default: [0, 0],
+},
     },
     bio: String,
     avatar: String,
