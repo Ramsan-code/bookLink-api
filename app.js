@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
+import errorHandler from "./middleware/errorHandler.js"
 
 dotenv.config();
 const app = express();
@@ -19,6 +20,7 @@ app.use("/api/readers", readerRouter);
 app.use("/api/books", bookRouter);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/transactions", transactionRouter);
+app.use(errorHandler)
 
 app.get("/", (req, res) => {
   res.send("Hello Express!");
