@@ -1,5 +1,17 @@
 import Review from "../models/Review.js";
 import Book from "../models/Book.js";
+export const getAllReviews = async (req, res, next) => {
+  try {
+    const reviews = await Review.find()
+      .populate("reviewer", "name email")
+      .populate("book", "title")
+      .sort({ createdAt: -1 });
+
+    res.json(reviews);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const createReview = async (req, res, next) => {
   try {

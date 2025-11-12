@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  getAllReviews,
   createReview,
   getReviewsByBook,
   deleteReview,
@@ -7,6 +8,7 @@ import {
 
 const router = express.Router();
 
+router.get("/", getAllReviews);
 router.get("/:bookId", getReviewsByBook);
 
 router.post("/:bookId", createReview);
