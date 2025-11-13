@@ -12,7 +12,7 @@ export const getAllReaders = async (req, res) => {
   }
 };
 
-// ✨ UPDATED: Register with welcome email
+//  UPDATED: Register with welcome email
 export const registerReader = async (req, res, next) => {
   try {
     const { name, email, password, location } = req.body;
@@ -105,6 +105,23 @@ export const updateProfile = async (req, res, next) => {
       _id: updatedReader._id,
       name: updatedReader.name,
       email: updatedReader.email,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export const logoutReader = async (req, res, next) => {
+  try {
+    // Optional: Update last logout time in database
+    if (req.user) {
+      await Reader.findByIdAndUpdate(req.user.id, {
+        lastLogout: new Date()
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully"
     });
   } catch (error) {
     next(error);
