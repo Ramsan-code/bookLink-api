@@ -10,7 +10,7 @@ export const getAllBooks = async (req, res) => {
       search,
       category,
       condition,
-      mode,
+      // REMOVED: mode parameter
       minPrice,
       maxPrice,
       available,
@@ -25,10 +25,8 @@ export const getAllBooks = async (req, res) => {
       radius,
     } = req.query;
 
-    // Build query
     const query = {};
 
-    // Text search in title, author, description
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: "i" } },
@@ -37,54 +35,42 @@ export const getAllBooks = async (req, res) => {
       ];
     }
 
-    // Category filter
     if (category) {
       query.category = category;
     }
 
-    // Condition filter
     if (condition) {
       query.condition = condition;
     }
 
-    // Mode filter (Sell/Rent)
-    if (mode) {
-      query.mode = mode;
-    }
+    // REMOVED: mode filter
 
-    // Price range filter
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = parseFloat(minPrice);
       if (maxPrice) query.price.$lte = parseFloat(maxPrice);
     }
 
-    // Availability filter
     if (available !== undefined) {
       query.available = available === "true";
     }
 
-    // Approval filter (default to approved for public)
     if (isApproved !== undefined) {
       query.isApproved = isApproved === "true";
     } else {
-      // By default, show only approved books to users
       query.isApproved = true;
     }
 
-    // Featured filter
     if (isFeatured !== undefined) {
       query.isFeatured = isFeatured === "true";
     }
 
-    // Owner filter
     if (owner) {
       query.owner = owner;
     }
 
-    // Location-based search (books within radius)
     if (lat && lng && radius) {
-      const radiusInRadians = parseFloat(radius) / 6378.1; // Earth radius in km
+      const radiusInRadians = parseFloat(radius) / 6378.1;
       query.location = {
         $geoWithin: {
           $centerSphere: [[parseFloat(lng), parseFloat(lat)], radiusInRadians],
@@ -92,8 +78,7 @@ export const getAllBooks = async (req, res) => {
       };
     }
 
-    // Sort
-    let sortQuery = { createdAt: -1 }; // Default: newest first
+    let sortQuery = { createdAt: -1 };
     if (sort) {
       sortQuery = {};
       const sortFields = sort.split(",");
@@ -106,12 +91,10 @@ export const getAllBooks = async (req, res) => {
       });
     }
 
-    // Pagination
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
 
-    // Execute query
     const books = await Book.find(query)
       .populate("owner", "name email location")
       .sort(sortQuery)
@@ -121,12 +104,11 @@ export const getAllBooks = async (req, res) => {
     const total = await Book.countDocuments(query);
     const response = paginationResponse(books, pageNum, limitNum, total);
 
-    // Add filters info to response
     response.filters = {
       search,
       category,
       condition,
-      mode,
+      // REMOVED: mode from filters
       priceRange: minPrice || maxPrice ? { minPrice, maxPrice } : null,
       location: lat && lng && radius ? { lat, lng, radius } : null,
     };
@@ -137,12 +119,9 @@ export const getAllBooks = async (req, res) => {
   }
 };
 
-/**
- * Search books near a location
- */
 export const getBooksNearLocation = async (req, res) => {
   try {
-    const { lat, lng, maxDistance = 10000 } = req.query; // Default 10km
+    const { lat, lng, maxDistance = 10000 } = req.query;
 
     if (!lat || !lng) {
       return res.status(400).json({
@@ -176,9 +155,6 @@ export const getBooksNearLocation = async (req, res) => {
   }
 };
 
-/**
- * Get featured books
- */
 export const getFeaturedBooks = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
@@ -209,21 +185,15 @@ export const getFeaturedBooks = async (req, res) => {
   }
 };
 
-/**
- * Get available books for rent or sale
- */
 export const getAvailableBooks = async (req, res) => {
   try {
-    const { mode, page = 1, limit = 10 } = req.query; // mode: Sell or Rent
+    const { page = 1, limit = 10 } = req.query;
+    // REMOVED: mode parameter
 
     const query = {
       available: true,
       isApproved: true,
     };
-
-    if (mode) {
-      query.mode = mode;
-    }
 
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
@@ -244,26 +214,22 @@ export const getAvailableBooks = async (req, res) => {
   }
 };
 
-/**
- * Advanced search with multiple filters
- */
 export const advancedSearch = async (req, res) => {
   try {
     const {
-      q, // General search query
-      categories, // Comma-separated categories
-      conditions, // Comma-separated conditions
-      modes, // Comma-separated modes
+      q,
+      categories,
+      conditions,
+      // REMOVED: modes parameter
       minPrice,
       maxPrice,
-      sortBy = "relevance", // relevance, price-asc, price-desc, newest, oldest
+      sortBy = "relevance",
       page = 1,
       limit = 10,
     } = req.query;
 
     const query = { isApproved: true };
 
-    // Text search
     if (q) {
       query.$or = [
         { title: { $regex: q, $options: "i" } },
@@ -272,32 +238,24 @@ export const advancedSearch = async (req, res) => {
       ];
     }
 
-    // Multiple categories
     if (categories) {
       const categoryList = categories.split(",");
       query.category = { $in: categoryList };
     }
 
-    // Multiple conditions
     if (conditions) {
       const conditionList = conditions.split(",");
       query.condition = { $in: conditionList };
     }
 
-    // Multiple modes
-    if (modes) {
-      const modeList = modes.split(",");
-      query.mode = { $in: modeList };
-    }
+    // REMOVED: modes filter
 
-    // Price range
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = parseFloat(minPrice);
       if (maxPrice) query.price.$lte = parseFloat(maxPrice);
     }
 
-    // Sorting
     let sortQuery = { createdAt: -1 };
     switch (sortBy) {
       case "price-asc":
@@ -330,12 +288,11 @@ export const advancedSearch = async (req, res) => {
     const total = await Book.countDocuments(query);
     const response = paginationResponse(books, pageNum, limitNum, total);
 
-    // Add search metadata
     response.searchQuery = q;
     response.appliedFilters = {
       categories: categories?.split(","),
       conditions: conditions?.split(","),
-      modes: modes?.split(","),
+      // REMOVED: modes from filters
       priceRange: { minPrice, maxPrice },
       sortBy,
     };
@@ -346,9 +303,6 @@ export const advancedSearch = async (req, res) => {
   }
 };
 
-/**
- * Get books by category with filters
- */
 export const getBooksByCategory = async (req, res) => {
   try {
     const { category } = req.params;
@@ -359,7 +313,6 @@ export const getBooksByCategory = async (req, res) => {
       isApproved: true,
     };
 
-    // Price filter
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = parseFloat(minPrice);
@@ -398,8 +351,6 @@ export const getBooksByCategory = async (req, res) => {
   }
 };
 
-// ============= KEEP YOUR EXISTING CRUD OPERATIONS =============
-
 export const getBooksById = async (req, res) => {
   try {
     const bookID = req.params.id;
@@ -409,7 +360,6 @@ export const getBooksById = async (req, res) => {
       return res.status(404).json({ message: "Book not found" });
     }
 
-    // Increment views
     book.views = (book.views || 0) + 1;
     await book.save();
 
@@ -470,5 +420,4 @@ export const deleteBook = async (req, res) => {
   }
 };
 
-// Keep backward compatibility with old method name
 export const getBooksByGenre = getBooksByCategory;

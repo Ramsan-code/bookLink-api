@@ -17,12 +17,8 @@ const transactionSchema = new mongoose.Schema(
       ref: "Reader",
       required: true,
     },
-    type: {
-      type: String,
-      enum: ["Buy", "Rent"],
-      required: true,
-    },
-    rentDurationDays: Number,
+    // REMOVED: type field (Buy/Rent)
+    // REMOVED: rentDurationDays field
     price: {
       type: Number,
       required: true,

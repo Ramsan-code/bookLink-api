@@ -7,7 +7,7 @@ A comprehensive RESTful API for a peer-to-peer book marketplace with admin appro
 ### Core Features
 - **User Management**: Registration with admin approval, JWT authentication, role-based access
 - **Book Listings**: CRUD operations with approval workflow and featured listings
-- **Transaction System**: Buy/rent books with email notifications
+- **Transaction System**: Buy books with email notifications
 - **Review System**: Rate and review books (1-5 stars)
 - **Admin Dashboard**: Complete control panel with statistics
 - **Email Notifications**: Automated emails for approvals, transactions, and updates
@@ -187,14 +187,13 @@ Authorization: Bearer <token>
 
 ### Get all books (with advanced filters)
 ```http
-GET /api/books?page=1&limit=10&search=gatsby&category=Fiction&condition=Good&mode=Sell&minPrice=10&maxPrice=50&available=true&isApproved=true&isFeatured=false&sort=-price,title&lat=6.0329&lng=80.2167&radius=10
+GET /api/books?page=1&limit=10&search=gatsby&category=Fiction&condition=Good&minPrice=10&maxPrice=50&available=true&isApproved=true&isFeatured=false&sort=-price,title&lat=6.0329&lng=80.2167&radius=10
 ```
 
 **Query Parameters:**
 - `search` - Search in title, author, description
 - `category` - Fiction, Non-fiction, Education, Comics, Other
 - `condition` - New, Good, Used
-- `mode` - Sell, Rent
 - `minPrice` - Minimum price filter
 - `maxPrice` - Maximum price filter
 - `available` - true/false
@@ -228,14 +227,13 @@ GET /api/books?page=1&limit=10&search=gatsby&category=Fiction&condition=Good&mod
 
 ### Advanced search
 ```http
-GET /api/books/search/advanced?q=fiction&categories=Fiction,Non-fiction&conditions=New,Good&modes=Sell&minPrice=5&maxPrice=100&sortBy=price-asc&page=1&limit=20
+GET /api/books/search/advanced?q=fiction&categories=Fiction,Non-fiction&conditions=New,Good&minPrice=5&maxPrice=100&sortBy=price-asc&page=1&limit=20
 ```
 
 **Query Parameters:**
 - `q` - General search query
 - `categories` - Comma-separated categories
 - `conditions` - Comma-separated conditions
-- `modes` - Comma-separated modes
 - `minPrice`, `maxPrice` - Price range
 - `sortBy` - relevance, price-asc, price-desc, newest, oldest, title
 - `page`, `limit` - Pagination
@@ -257,11 +255,10 @@ GET /api/books/featured?page=1&limit=10
 
 ### Get available books
 ```http
-GET /api/books/available?mode=Sell&page=1&limit=10
+GET /api/books/available?page=1&limit=10
 ```
 
 **Query Parameters:**
-- `mode` - Sell or Rent (optional)
 - `page`, `limit` - Pagination
 
 ### Get books by category
@@ -287,7 +284,6 @@ Content-Type: application/json
   "category": "Fiction",
   "condition": "Good",
   "price": 15.99,
-  "mode": "Sell",
   "location": {
     "type": "Point",
     "coordinates": [80.2167, 6.0329]
@@ -373,14 +369,12 @@ Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "bookId": "book_id_here",
-  "type": "Rent",
-  "rentDurationDays": 14
+  "bookId": "book_id_here"
 }
 ```
 
 **Business Logic:**
-- ❌ Cannot buy/rent your own book
+- ❌ Cannot buy your own book
 - ✅ Book must be available
 - 📧 Seller receives email notification
 - 🔒 Book marked as unavailable
@@ -395,10 +389,8 @@ Content-Type: application/json
     "book": {...},
     "buyer": {...},
     "seller": {...},
-    "type": "Rent",
     "price": 15.99,
     "status": "Pending",
-    "rentDurationDays": 14,
     "createdAt": "..."
   }
 }
@@ -653,7 +645,6 @@ Authorization: Bearer <admin_token>
   category: Enum ["Fiction", "Non-fiction", "Education", "Comics", "Other"],
   condition: Enum ["New", "Good", "Used"],
   price: Number (required),
-  mode: Enum ["Sell", "Rent"],
   location: {
     type: "Point",
     coordinates: [longitude, latitude]
@@ -696,8 +687,6 @@ Authorization: Bearer <admin_token>
   book: ObjectId (ref: Book, required),
   buyer: ObjectId (ref: Reader, required),
   seller: ObjectId (ref: Reader, required),
-  type: Enum ["Buy", "Rent"],
-  rentDurationDays: Number,
   price: Number (required),
   status: Enum ["Pending", "Completed", "Cancelled"],
   createdAt: Date,
@@ -732,7 +721,7 @@ The system sends automated emails for:
 **Content:** Rejection notice, reason, improvement suggestions
 
 ### 5. Transaction Created Email
-**Trigger:** New buy/rent transaction  
+**Trigger:** New purchase transaction  
 **Recipient:** Book seller  
 **Content:** Transaction details, buyer info, next steps
 
@@ -749,7 +738,7 @@ The system sends automated emails for:
 ### Authentication & Authorization
 - JWT tokens with 15-minute expiration
 - Password hashing with bcryptjs (10 salt rounds)
-- Role-based access control (User, Moderator, Admin)
+- Role-based access control (User, Admin)
 - Protected routes with middleware
 
 ### Access Control Levels
@@ -758,7 +747,7 @@ The system sends automated emails for:
 |---------|------|-------|
 | Browse books | ✅ | ✅ |
 | Create listings | ✅* | ✅ |
-| Buy/Rent books | ✅* | ✅ |
+| Buy books | ✅* | ✅ |
 | Leave reviews | ✅* | ✅ |
 | Approve users | ❌ | ✅ |
 | Approve books | ❌ | ✅ |
@@ -774,7 +763,7 @@ The system sends automated emails for:
 - Mongoose schema validation
 - Email uniqueness enforcement
 - One review per user per book
-- Cannot buy/rent own books
+- Cannot buy own books
 - Price and rating constraints
 
 ### Error Handling
@@ -906,7 +895,6 @@ curl -X POST http://localhost:5000/api/books \
     "category": "Fiction",
     "condition": "Good",
     "price": 20.99,
-    "mode": "Sell",
     "location": {"type": "Point", "coordinates": [80.2167, 6.0329]},
     "owner": "USER_ID"
   }'
@@ -1046,7 +1034,6 @@ For support:
 - [ ] Multi-language support
 - [ ] Social media integration
 - [ ] Book condition verification with AI
-- [ ] Automated rent duration tracking
 - [ ] Review moderation with AI
 - [ ] Seller ratings and badges
 - [ ] Shipping integration

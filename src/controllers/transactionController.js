@@ -2,10 +2,11 @@ import Transaction from "../models/Transaction.js";
 import Book from "../models/Book.js";
 import { sendEmail } from "../services/emailService.js";
 
-//  UPDATED: Create transaction with email notification to seller
+// UPDATED: Create transaction - only BUY, no rent
 export const createTransaction = async (req, res, next) => {
   try {
-    const { bookId, type, rentDurationDays } = req.body;
+    const { bookId } = req.body;
+    // REMOVED: type and rentDurationDays parameters
 
     const book = await Book.findById(bookId).populate("owner");
     if (!book) return res.status(404).json({ message: "Book not found" });
@@ -14,32 +15,31 @@ export const createTransaction = async (req, res, next) => {
       return res.status(400).json({ message: "Book not available" });
 
     if (book.owner._id.toString() === req.user.id)
-      return res.status(400).json({ message: "Cannot buy/rent your own book" });
+      return res.status(400).json({ message: "Cannot buy your own book" });
 
     const transaction = await Transaction.create({
       book: bookId,
       buyer: req.user.id,
       seller: book.owner._id,
-      type,
-      rentDurationDays: type === "Rent" ? rentDurationDays : undefined,
+      // REMOVED: type field
+      // REMOVED: rentDurationDays field
       price: book.price,
     });
 
     book.available = false;
     await book.save();
 
-    // Populate transaction for email
     await transaction.populate([
       { path: "buyer", select: "name email" },
       { path: "book", select: "title" },
     ]);
 
-    //  Send notification email to seller
+    // Send notification email to seller
     await sendEmail(book.owner.email, "transactionCreated", {
       sellerName: book.owner.name,
       buyerName: transaction.buyer.name,
       bookTitle: transaction.book.title,
-      transactionType: type,
+      transactionType: "Purchase", // CHANGED: Always purchase
       price: book.price,
     });
 

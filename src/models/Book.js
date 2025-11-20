@@ -25,11 +25,7 @@ const bookSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Price is required"],
     },
-    mode: {
-      type: String,
-      enum: ["Sell", "Rent"],
-      required: true,
-    },
+    // REMOVED: mode field (Sell/Rent)
     location: {
       type: {
         type: String,
@@ -52,10 +48,9 @@ const bookSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    //  NEW: Approval system for books
     isApproved: {
       type: Boolean,
-      default: false, // Books need admin approval
+      default: false,
     },
     approvalStatus: {
       type: String,
@@ -72,12 +67,10 @@ const bookSchema = new mongoose.Schema(
     rejectionReason: {
       type: String,
     },
-    //  NEW: Featured by admin
     isFeatured: {
       type: Boolean,
       default: false,
     },
-    //  NEW: Views counter
     views: {
       type: Number,
       default: 0,
